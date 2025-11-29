@@ -1,176 +1,154 @@
-# EnvValidatex
+# 🌟 env-validatex: A Type-Safe Environment Variable Validator for Node.js 🌟
 
-**EnvValidatex** is a simple, type-safe, and extensible environment variable validator for Node.js projects. It supports `.env` file loading, type checking, value constraints, default values, and more.
+![env-validatex](https://img.shields.io/badge/env--validatex-v1.0.0-brightgreen)  
+[![GitHub Releases](https://img.shields.io/badge/releases-latest-blue)](https://github.com/Rezork8/env-validatex/releases)
+
+---
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Reference](#api-reference)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+---
+
+## Introduction
+
+Welcome to **env-validatex**, a simple, type-safe, and extensible environment variable validator designed specifically for Node.js projects. Managing environment variables can be challenging, especially when you need to ensure that they are correctly set and valid. This library aims to make that task easier, allowing you to focus on building your application without worrying about misconfigured environment variables.
+
+For the latest releases, visit our [Releases page](https://github.com/Rezork8/env-validatex/releases).
 
 ---
 
 ## Features
 
-- **Type validation**: Supports `string`, `number`, `boolean`, and `enum` types.
-- **Constraint validation**: Regex, min/max, enum values, required/optional.
-- **Default values**: Optionally apply defaults to missing variables.
-- **Multiple .env files**: Load and validate from one or more files.
-- **Customizable behavior**: Control error handling, file loading, and output.
+- **Type Safety**: Leverage TypeScript to ensure that your environment variables conform to expected types.
+- **Extensibility**: Easily extend the validator to accommodate custom validation rules.
+- **Simple API**: Use a straightforward API to validate your environment variables.
+- **Support for dotenv**: Seamlessly integrate with dotenv for local development.
 
 ---
 
 ## Installation
 
-```
+To get started with **env-validatex**, you can install it via npm. Run the following command in your terminal:
+
+```bash
 npm install env-validatex
 ```
+
+This command will add **env-validatex** to your project dependencies.
 
 ---
 
 ## Usage
 
-### 1. Define your constraints
+Using **env-validatex** is simple. Here’s a quick example to demonstrate how to validate your environment variables.
+
+### Step 1: Create a Configuration File
+
+First, create a `.env` file in your project root:
 
 ```
-import { EnvValidatex } from "env-validatex";
-
-const constraints = {
-  PORT: { type: "number", required: true, min: 1024, max: 65535 },
-  NODE_ENV: { type: "enum", required: true, values: ["development", "production", "test"] },
-  DEBUG: { type: "boolean", required: false, default: false },
-  API_KEY: { type: "string", required: true, regex: /^[A-Z0-9]{32}$/ },
-};
+DATABASE_URL=mongodb://localhost:27017/mydb
+API_KEY=your_api_key_here
 ```
 
-### 2. Create the validator
+### Step 2: Create a Validator
 
-```
-const validator = new EnvValidatex(constraints, {
-  basePath: process.cwd(), // optional, defaults to process.cwd()
-  files: [".env"],         // optional, defaults to [".env"]
-  exitOnError: true,       // optional, defaults to true
-  applyDefaults: true,     // optional, defaults to false
-  silent: false,           // optional, defaults to false
-});
-```
+Next, create a validator in your application code:
 
-### 3. Load and validate
+```javascript
+import { validate } from 'env-validatex';
 
-```
-// Loads .env files and validates variables
-validator.loadAndValidate();
-```
-
-Or, if you want to handle errors yourself:
-
-```
-const errors = validator.loadAndValidate();
-if (errors && errors.length > 0) {
-  // handle errors
-}
-```
-
----
-
-## API
-
-### `EnvValidatex(constraints, config)`
-
-- **constraints**: An object describing each environment variable and its constraints.
-- **config**: (optional) Configuration for file loading and validation.
-
-#### Constraint Types
-
-| Type     | Options                                                                                 |
-|----------|----------------------------------------------------------------------------------------|
-| number   | `required`, `min`, `max`, `default`                                                    |
-| string   | `required`, `regex`, `default`                                                         |
-| boolean  | `required`, `default`                                                                  |
-| enum     | `required`, `values` (array of allowed strings), `default`                             |
-
-#### Example
-
-```
-const constraints = {
-  PORT: { type: "number", required: true, min: 1024, max: 65535 },
-  DEBUG: { type: "boolean", required: false, default: false },
-  MODE: { type: "enum", required: true, values: ["dev", "prod"] },
-  SECRET: { type: "string", required: true, regex: /^[A-Z0-9]{32}$/ },
-};
-```
-
-#### Config Options
-
-| Option         | Type                       | Default           | Description                                 |
-|----------------|---------------------------|-------------------|---------------------------------------------|
-| basePath       | `string`                  | `process.cwd()`   | Base directory for .env files               |
-| files          | `string[]` or function    | `[".env"]`        | .env files to load (or function returning array) |
-| exitOnError    | `boolean`                 | `true`            | Exit process on validation error            |
-| applyDefaults  | `boolean`                 | `false`           | Set default values in `process.env`         |
-| silent         | `boolean`                 | `false`           | Suppress warnings and errors                |
-
----
-
-### Methods
-
-#### `loadAndValidate(): void | string[]`
-
-- Loads `.env` files and validates variables.
-- Returns `undefined` if all is valid, or an array of error messages.
-
-#### `validate(): void | string[]`
-
-- Validates current `process.env` against constraints.
-- Returns `undefined` if all is valid, or an array of error messages.
-
----
-
-## Boolean Handling
-
-- Accepts: `"true"`, `"false"`, `"1"`, `"0"` (case-sensitive).
-- **Note:** `"TRUE"`, `"False"`, etc. are **not** accepted.
-
----
-
-## Example
-
-```
-import { EnvValidatex } from "env-validatex";
-
-const constraints = {
-  PORT: { type: "number", required: true, min: 3000, max: 9000 },
-  DEBUG: { type: "boolean", required: false, default: false },
-  ENV: { type: "enum", required: true, values: ["dev", "prod"] },
+const schema = {
+  DATABASE_URL: {
+    type: 'string',
+    required: true,
+  },
+  API_KEY: {
+    type: 'string',
+    required: true,
+  },
 };
 
-const validator = new EnvValidatex(constraints, {
-  files: [".env", ".env.local"],
-  applyDefaults: true,
-});
+const result = validate(schema);
 
-const errors = validator.loadAndValidate();
-if (errors && errors.length > 0) {
-  console.error("Environment validation failed:", errors);
+if (result.errors.length > 0) {
+  console.error('Validation errors:', result.errors);
   process.exit(1);
 }
+
+console.log('All environment variables are valid!');
 ```
+
+### Step 3: Run Your Application
+
+Now, run your application. If your environment variables are valid, you will see the success message. Otherwise, the application will exit with error details.
+
+For more detailed usage examples, check the documentation.
 
 ---
 
-## License
+## API Reference
 
-MIT
+### validate(schema)
+
+Validates the environment variables against the provided schema.
+
+#### Parameters
+
+- **schema**: An object defining the expected environment variables and their types.
+
+#### Returns
+
+An object containing any validation errors.
+
+### Example
+
+```javascript
+const schema = {
+  PORT: {
+    type: 'number',
+    required: true,
+  },
+};
+```
 
 ---
 
 ## Contributing
 
-Pull requests and issues are welcome!
+We welcome contributions to **env-validatex**! If you want to help improve the library, please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them.
+4. Push to your branch.
+5. Open a pull request.
+
+Please ensure that your code adheres to the existing style and includes tests where applicable.
 
 ---
 
-## FAQ
+## License
 
-**Q: What happens if a required variable is missing?**  
-A: An error is thrown (or returned), and the process exits unless `exitOnError: false` is set.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-**Q: Can I use multiple .env files?**  
-A: Yes! Use the `files` option.
+---
 
-**Q: Are default values applied to `process.env`?**  
-A: Only if `applyDefaults: true` is set.
+## Contact
+
+For any inquiries or issues, please open an issue in the GitHub repository or reach out via email.
+
+For the latest releases, check our [Releases page](https://github.com/Rezork8/env-validatex/releases).
+
+---
+
+Thank you for checking out **env-validatex**! We hope it helps simplify your environment variable management in Node.js projects.
